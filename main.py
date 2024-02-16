@@ -1,4 +1,5 @@
 import pygame
+import math
 
 # 初始化
 pygame.init()
@@ -16,15 +17,39 @@ car_img = pygame.image.load("source/picture/car.png").convert_alpha()
 class Car(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        self.acceleration = 0
+        self.acceleration_x = 0
+        self.acceleration_y = 0
+        self.velocity = 0
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.angle = 0
+        self.angular_velocity = 0
+        self.angular_acceleration = 0
+
         self.image = car_img
         self.rect = self.image.get_rect()
         self.rect.x = 50
         self.rect.y = 50
 
-    def rotate(self, angle):
-        # 选择机身
-        self.image = pygame.transform.rotate(car_img, angle)
+    def rotate(self):
+        self.image = pygame.transform.rotate(car_img, -self.angle)
         self.rect = self.image.get_rect(center=self.rect.center)
+
+    def set(self, acceleration, angular_acceleration):
+        self.acceleration = acceleration
+        self.angular_acceleration = angular_acceleration
+
+    def run(self):
+        self.velocity = self.velocity + self.acceleration
+        self.velocity_x = self.velocity * math.cos(self.angle * math.pi / 180)
+        self.velocity_y = self.velocity * math.sin(self.angle * math.pi / 180)
+        self.rect.x = self.rect.x + self.velocity_x
+        self.rect.y = self.rect.y + self.velocity_y
+        self.angular_velocity = self.angular_velocity + self.angular_acceleration
+        self.angle = self.angle + self.angular_velocity
+
+        self.rotate()
 
 
 # 小车加载
@@ -35,6 +60,11 @@ car_group.add(car)
 # 游戏循环
 running = True
 while running:
+    # 无事件参数
+    car.angular_acceleration = -car.angular_velocity/abs(car.angular_velocity) if abs(car.angular_velocity) >= 0.5 else 0
+    car.acceleration = -car.velocity/abs(car.velocity) if car.velocity != 0 else 0
+    print(car.angular_acceleration)
+    print(car.angular_velocity)
     # 事件处理
     for event in pygame.event.get():
         # 退出代码
@@ -46,12 +76,15 @@ while running:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                car.rect.x -= 1
-                car.rotate(90)
+                car.angular_acceleration = -0.5
             elif event.key == pygame.K_RIGHT:
-                car.rect.x += 1
-                car.rotate(-90)
-
+                car.angular_acceleration = 0.5
+            elif event.key == pygame.K_UP:
+                car.acceleration = 1
+            elif event.key == pygame.K_DOWN:
+                car.acceleration = -1
+    # 计算
+    car.run()
     # 绘制
     screen.fill((130, 200, 235))
     car_group.draw(screen)
