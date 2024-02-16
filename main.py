@@ -1,4 +1,7 @@
 import pygame
+import cv2
+
+
 
 # 初始化
 pygame.init()
@@ -58,3 +61,4 @@ while running:
 
     pygame.display.update()
     clock.tick(60)
+
