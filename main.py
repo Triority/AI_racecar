@@ -42,12 +42,15 @@ class Car(pygame.sprite.Sprite):
 
     def run(self):
         self.velocity = self.velocity + self.acceleration
+        if self.velocity > 20:
+            self.velocity = 20
+
         self.velocity_x = self.velocity * math.cos(self.angle * math.pi / 180)
         self.velocity_y = self.velocity * math.sin(self.angle * math.pi / 180)
         self.rect.x = self.rect.x + self.velocity_x
         self.rect.y = self.rect.y + self.velocity_y
         self.angular_velocity = self.angular_velocity + self.angular_acceleration
-        self.angle = self.angle + self.angular_velocity
+        self.angle = self.angle + 0.03 * self.angular_velocity * self.velocity
 
         self.rotate()
 
@@ -61,28 +64,30 @@ car_group.add(car)
 running = True
 while running:
     # 无事件参数
-    car.angular_acceleration = -car.angular_velocity/abs(car.angular_velocity) if abs(car.angular_velocity) >= 0.5 else 0
+    car.angular_acceleration = -car.angular_velocity/abs(car.angular_velocity) if car.angular_velocity != 0 else 0
     car.acceleration = -car.velocity/abs(car.velocity) if car.velocity != 0 else 0
-    print(car.angular_acceleration)
-    print(car.angular_velocity)
+
+    print(car.velocity)
+
     # 事件处理
     for event in pygame.event.get():
         # 退出代码
         if event.type == pygame.QUIT:
             running = False
-        # 键鼠操作(如果有的话)直接写点击退出了
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            print("鼠标点击")
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                car.angular_acceleration = -0.5
-            elif event.key == pygame.K_RIGHT:
-                car.angular_acceleration = 0.5
-            elif event.key == pygame.K_UP:
-                car.acceleration = 1
-            elif event.key == pygame.K_DOWN:
-                car.acceleration = -1
+
+    # 键盘处理
+    key_pressed = pygame.key.get_pressed()
+    if key_pressed[pygame.K_LEFT]:
+        car.angular_velocity = -10
+    if key_pressed[pygame.K_RIGHT]:
+        car.angular_velocity = 10
+    if key_pressed[pygame.K_UP]:
+        car.acceleration = 1
+    if key_pressed[pygame.K_DOWN]:
+        car.acceleration = -1
+
     # 计算
     car.run()
     # 绘制
