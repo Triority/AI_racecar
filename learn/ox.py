@@ -1,5 +1,5 @@
 import time
-
+import hashlib
 import numpy
 import random
 
@@ -39,5 +39,23 @@ class ooxx_machine():
             else:
                 raise ValueError("this location has been used")
 
+
+class DlModel:
+    def __init__(self):
+        self.learn_rate = 0.1
+        self.rand_poss = 0.05
+        self.net_values = []
+    def refresh_net(self,race:list,value:float):
+        hash_value = hash(race)
+        if hash_value in self.net_values:
+            pass
+
+
+
+
+
+
 if __name__ == "__name__":
+
+
     time.sleep(1)
