@@ -2,7 +2,7 @@ import time
 import hashlib
 import numpy
 import random
-
+import json
 
 class ooxx_machine():
     def __init__(self):
@@ -14,9 +14,10 @@ class ooxx_machine():
 # ----------------------------------------------------------------
         self.learn_rate = 0.1
         self.rand_poss = 0.05
-        self.net_values = []
+        self.net_values = {}
         self.default_value = 0.8
         self.need_been_change_value = 0.8
+
 
 
     def update_win(self):
@@ -107,23 +108,61 @@ class ooxx_machine():
                 raise ValueError("this location has been used")
         return "fin"
 
-
     # 我对强化学习的理解还不够透彻
-    def refresh_net(self, now_race: list, next_race: list, value: float, flag: bool) -> bool:
+    def refresh_net(self, now_race: list, next_race: list, flag: bool) -> bool:
         # 传参： 赛场情况 需要更新的价值（在此赛场情况之前的价值） （本赛场）是否获胜
-        hash_value = hash(str(now_race))
-        hash_next = hash(str(next_race))
+        hash_value: int = hash(str(now_race))
+        hash_next: int = hash(str(next_race))
+
+        # 如果给下死了就给Value 置于 0
+        if self.flag == 'b_win':
+            self.net_values[hash_value] = 0
+            return False
+
+        # 更新下一次预期之获胜情况
+        copy_race = self.race
+        self.race = next_race
+        self.update_win()
+        if self.flag == 'a_win':
+            next_value = 1
+        else:
+            next_value = 0
+        self.race = copy_race
+        self.update_win()
 
         if hash_next not in self.net_values:
-            self.net_values.append([hash_next, self.default_value])
-
+            if next_value == 0:
+                self.net_values[hash_value] = self.default_value
+            elif next_value == 1:
+                self.net_values[hash_value] = 1
         if hash_value not in self.net_values:
-            self.net_values.append([hash_value, self.default_value])
+            self.net_values[hash_value] = self.default_value
+            value = self.default_value
         else:
-            now_value = self.net_values[hash_value]
-            now_value = now_value + (now_value - self.last_value) / self.learn_rate
+            value = self.net_values[hash_value]
+        value = value + (next_value - value) * self.learn_rate
+
+        self.net_values[hash_value] = value
+        return True
+
+    def save_net(self, filename='net.json'):
+        with open(filename, 'w') as file:
+            json.dump(self.net_values, file)
+        print(f"Net values saved to {filename}.")
+
+    def read_net(self, filename='net.json'):
+        with open(filename, 'r') as file:
+            self.net_values = json.load(file)
+        print(f"Net values loaded from {filename}.")
+
+    def start_train(self, epoch: int = 1000) -> bool:
+        self.reset()
+        for i in range(1, epoch):
+            pass
+            # do the race once at here
 
         return True
+
 
 
 if __name__ == "__name__":
