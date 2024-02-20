@@ -1,21 +1,21 @@
-
 import copy
 import random
 import json
 import matplotlib.pyplot as plt
-class ooxx_machine():
+
+
+class OoxxMachine:
     def __init__(self):
         self.race = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         # 用于表示棋盘 0代表没下过 1 A玩家 2 B玩家
 
         self.flag = "in_race"
         # all situation is "in_race" or "a_win" or "b_win" or "all_lose"
-# ----------------------------------------------------------------
-        self.learn_rate = 0.05
-        self.rand_poss = 0
+        # ----------------------------------------------------------------
+        self.learn_rate = 0.1
+        self.rand_poss = 0.05
         self.net_values = {}
         self.default_value = 0.5
-
 
     def update_win(self):
 
@@ -31,7 +31,6 @@ class ooxx_machine():
             -------------
 
         """
-
 
         if self.race[0][0] == self.race[0][1] == self.race[0][2]:
             if self.race[0][0] == 1:
@@ -90,7 +89,7 @@ class ooxx_machine():
             else:
                 pass
 
-        all_chess =0
+        all_chess = 0
         for i in range(0, 3):
             for j in range(0, 3):
                 if self.race[i][j] != 0:
@@ -102,10 +101,11 @@ class ooxx_machine():
 
     def reset(self):
         self.race = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-        self.flag ="in_race"
+        self.flag = "in_race"
+
     def do_once(self, racer: "str == a or b", location: list) -> str:
         could_do = True
-        for i in range(0,3):
+        for i in range(0, 3):
             if 0 in self.race[i]:
                 could_do = True
             else:
@@ -127,7 +127,7 @@ class ooxx_machine():
         return "fin"
 
     # 我对强化学习的理解还不够透彻
-    def refresh_net(self, now_race: list, next_race: list, flag: bool) -> bool:
+    def refresh_net(self, now_race: list, next_race: list) -> bool:
         # 传参： 赛场情况 需要更新的价值（在此赛场情况之前的价值） （本赛场）是否获胜
         hash_value: int = hash(str(now_race))
         hash_next: int = hash(str(next_race))
@@ -171,11 +171,11 @@ class ooxx_machine():
             self.net_values = json.load(file)
         print(f"Net values loaded from {filename}.")
 
-    def random_player(self,player:str):
+    def random_player(self, player: str):
         possible_location = []
         race_copy = self.race
-        for i in range (0,3):
-            for j in range(0,3):
+        for i in range(0, 3):
+            for j in range(0, 3):
                 if race_copy[i][j] == 0:
                     possible_location.append([i, j])
         if not possible_location:
@@ -184,15 +184,16 @@ class ooxx_machine():
             return False
         location = random.choice(possible_location)
         self.do_once(player, location)
+
     def start_train(self, epoch: int = 1000) -> bool:
         self.reset()
         a_win_times = 1
         b_win_times = 1
         win_rate = []
         for times in range(1, epoch):
-            win_rate.append( a_win_times / (a_win_times + b_win_times))
+            win_rate.append(a_win_times / (a_win_times + b_win_times))
             plt.plot(win_rate)
-            #print(self.race)
+            # print(self.race)
 
             if self.flag == "a_win":
                 a_win_times += 1
@@ -203,8 +204,7 @@ class ooxx_machine():
             # print(self.net_values)
 
             self.reset()
-            if random.randint(0,1):
-
+            if random.randint(0, 1):
 
                 while self.flag == "in_race":
                     self.update_win()
@@ -245,10 +245,10 @@ class ooxx_machine():
                         random_max_index = random.choice(max_indices)
                         next_race = next_races[random_max_index]
                         # print(next_races)
-                        self.refresh_net(self.race, next_race, True)
+                        self.refresh_net(self.race, next_race)
 
                         self.race = next_race
-                        #print(self.race)
+                        # print(self.race)
                     else:
                         # print("random")
                         if self.random_player("a"):
@@ -295,17 +295,15 @@ class ooxx_machine():
                             else:
 
                                 values.append(self.net_values[next_hash])
-                        try:
-                            max_value = max(values)
-                        except:
-                            print(self.race)
-                            print(self.flag)
+
+                        max_value = max(values)
+
                         max_indices = [index for index, value in enumerate(values) if value == max_value]
 
                         random_max_index = random.choice(max_indices)
                         next_race = next_races[random_max_index]
                         # print(next_races)
-                        self.refresh_net(self.race, next_race, True)
+                        self.refresh_net(self.race, next_race)
 
                         self.race = next_race
                         # print(self.race)
@@ -316,23 +314,15 @@ class ooxx_machine():
                         else:
                             break
 
-
-
-
-
-
-
             # do the race once at here
         print(f"a wins {str(a_win_times)} b wins {str(b_win_times)}")
-        print(f"A的胜率是{str(a_win_times/(a_win_times+b_win_times))}")
+        print(f"A的胜率是{str(a_win_times / (a_win_times + b_win_times))}")
         plt.show()
         return True
 
 
-
 if __name__ == "__main__":
-
-    aa = ooxx_machine()
-    aa.read_net()
+    aa = OoxxMachine()
+    # aa.read_net()
     aa.start_train(10000)
-    aa.save_net()
+    # aa.save_net()
