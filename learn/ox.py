@@ -1,8 +1,8 @@
-import time
-import hashlib
+
 import copy
 import random
 import json
+import matplotlib.pyplot as plt
 class ooxx_machine():
     def __init__(self):
         self.race = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
@@ -11,8 +11,8 @@ class ooxx_machine():
         self.flag = "in_race"
         # all situation is "in_race" or "a_win" or "b_win" or "all_lose"
 # ----------------------------------------------------------------
-        self.learn_rate = 0.1
-        self.rand_poss = 0.1
+        self.learn_rate = 0.05
+        self.rand_poss = 0.08
         self.net_values = {}
         self.default_value = 0.5
 
@@ -31,6 +31,7 @@ class ooxx_machine():
             -------------
 
         """
+
 
         if self.race[0][0] == self.race[0][1] == self.race[0][2]:
             if self.race[0][0] == 1:
@@ -88,6 +89,16 @@ class ooxx_machine():
                 self.flag = "b_win"
             else:
                 pass
+
+        all_chess =0
+        for i in range(0, 3):
+            for j in range(0, 3):
+                if self.race[i][j] != 0:
+                    all_chess += 1
+                    # print(all_chess)
+        if all_chess == 8 and self.flag == "in_race":
+            self.flag = "all_lose"
+            return False
 
     def reset(self):
         self.race = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
@@ -169,14 +180,19 @@ class ooxx_machine():
                     possible_location.append([i, j])
         if not possible_location:
             self.flag = "all_lose"
+
             return False
         location = random.choice(possible_location)
         self.do_once(player, location)
     def start_train(self, epoch: int = 1000) -> bool:
         self.reset()
-        a_win_times = 0
-        b_win_times = 0
+        a_win_times = 1
+        b_win_times = 1
+        win_rate = []
         for times in range(1, epoch):
+            win_rate.append( a_win_times / (a_win_times + b_win_times))
+            plt.plot(win_rate)
+            #print(self.race)
 
             if self.flag == "a_win":
                 a_win_times += 1
@@ -232,9 +248,9 @@ class ooxx_machine():
                         self.refresh_net(self.race, next_race, True)
 
                         self.race = next_race
-                        print(self.race)
+                        #print(self.race)
                     else:
-                        print("random")
+                        # print("random")
                         if self.random_player("a"):
                             pass
                         else:
@@ -275,14 +291,15 @@ class ooxx_machine():
                             if next_hash not in self.net_values:
                                 self.net_values[next_hash] = self.default_value
                                 values.append(self.default_value)
+
                             else:
+
                                 values.append(self.net_values[next_hash])
                         try:
                             max_value = max(values)
                         except:
-                            self.flag = "all_lose"
-                            print("OH NO")
-                            break
+                            print(self.race)
+                            print(self.flag)
                         max_indices = [index for index, value in enumerate(values) if value == max_value]
 
                         random_max_index = random.choice(max_indices)
@@ -293,7 +310,7 @@ class ooxx_machine():
                         self.race = next_race
                         # print(self.race)
                     else:
-                        print("random")
+                        # print("random")
                         if self.random_player("a"):
                             pass
                         else:
@@ -307,6 +324,8 @@ class ooxx_machine():
 
             # do the race once at here
         print(f"a wins {str(a_win_times)} b wins {str(b_win_times)}")
+        print(f"A的胜率是{str(a_win_times/(a_win_times+b_win_times))}")
+        plt.show()
         return True
 
 
@@ -314,5 +333,6 @@ class ooxx_machine():
 if __name__ == "__main__":
 
     aa = ooxx_machine()
-
-    aa.start_train(1000)
+    # aa.read_net()
+    aa.start_train(10000)
+    aa.save_net()
