@@ -12,11 +12,9 @@ class ooxx_machine():
         # all situation is "in_race" or "a_win" or "b_win" or "all_lose"
 # ----------------------------------------------------------------
         self.learn_rate = 0.1
-        self.rand_poss = 0.05
+        self.rand_poss = 0.1
         self.net_values = {}
-        self.default_value = 0.8
-        self.need_been_change_value = 0.8
-
+        self.default_value = 0.5
 
 
     def update_win(self):
@@ -173,16 +171,23 @@ class ooxx_machine():
             self.flag = "all_lose"
             return False
         location = random.choice(possible_location)
-        self.do_once(player,location)
-    def start_train(self, epoch: int = 100) -> bool:
+        self.do_once(player, location)
+    def start_train(self, epoch: int = 1000) -> bool:
         self.reset()
+        a_win_times = 0
+        b_win_times = 0
         for times in range(1, epoch):
-            print(self.flag)
-            print(times)
+
+            if self.flag == "a_win":
+                a_win_times += 1
+            elif self.flag == "b_win":
+                b_win_times += 1
+
+            # print(times)
             # print(self.net_values)
 
             self.reset()
-            if 1:
+            if random.randint(0,1):
 
 
                 while self.flag == "in_race":
@@ -200,15 +205,15 @@ class ooxx_machine():
 
                         values = []
                         for next_race in next_races:
-                            copy_race = self.race
-                            self.race = next_race
+                            copy_race = copy.deepcopy(self.race)
+                            self.race = copy.deepcopy(next_race)
                             self.update_win()
                             if self.flag == 'a_win':
                                 self.net_values[hash(str(next_race))] = 1
 
                             elif self.flag == 'b_win' or "all_lose":
                                 self.net_values[hash(str(next_race))] = 0
-                            self.race = copy_race
+                            self.race = copy.deepcopy(copy_race)
                             self.update_win()
 
                             next_hash = hash(str(next_race))
@@ -237,9 +242,11 @@ class ooxx_machine():
                     self.random_player("b")
 
             else:
-                while self.flag == "in_race":
 
+                while self.flag == "in_race":
+                    self.update_win()
                     self.random_player("b")
+
                     if random.random() >= self.rand_poss:
                         next_races = []
                         for i in range(0, 3):
@@ -250,17 +257,18 @@ class ooxx_machine():
                                     next_races.append(races_copy)
                                 else:
                                     pass
+
                         values = []
                         for next_race in next_races:
-                            copy_race = self.race
-                            self.race = next_race
+                            copy_race = copy.deepcopy(self.race)
+                            self.race = copy.deepcopy(next_race)
                             self.update_win()
                             if self.flag == 'a_win':
                                 self.net_values[hash(str(next_race))] = 1
 
                             elif self.flag == 'b_win' or "all_lose":
                                 self.net_values[hash(str(next_race))] = 0
-                            self.race = copy_race
+                            self.race = copy.deepcopy(copy_race)
                             self.update_win()
 
                             next_hash = hash(str(next_race))
@@ -269,15 +277,23 @@ class ooxx_machine():
                                 values.append(self.default_value)
                             else:
                                 values.append(self.net_values[next_hash])
-
-                        max_value = max(values)
+                        try:
+                            max_value = max(values)
+                        except:
+                            self.flag = "all_lose"
+                            print("OH NO")
+                            break
                         max_indices = [index for index, value in enumerate(values) if value == max_value]
 
                         random_max_index = random.choice(max_indices)
                         next_race = next_races[random_max_index]
+                        # print(next_races)
                         self.refresh_net(self.race, next_race, True)
+
                         self.race = next_race
+                        # print(self.race)
                     else:
+                        print("random")
                         if self.random_player("a"):
                             pass
                         else:
@@ -290,7 +306,7 @@ class ooxx_machine():
 
 
             # do the race once at here
-
+        print(f"a wins {str(a_win_times)} b wins {str(b_win_times)}")
         return True
 
 
@@ -299,4 +315,4 @@ if __name__ == "__main__":
 
     aa = ooxx_machine()
 
-    aa.start_train()
+    aa.start_train(1000)
