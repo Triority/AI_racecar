@@ -12,7 +12,7 @@ class ooxx_machine():
         # all situation is "in_race" or "a_win" or "b_win" or "all_lose"
 # ----------------------------------------------------------------
         self.learn_rate = 0.05
-        self.rand_poss = 0.08
+        self.rand_poss = 0
         self.net_values = {}
         self.default_value = 0.5
 
@@ -333,6 +333,6 @@ class ooxx_machine():
 if __name__ == "__main__":
 
     aa = ooxx_machine()
-    # aa.read_net()
+    aa.read_net()
     aa.start_train(10000)
     aa.save_net()
