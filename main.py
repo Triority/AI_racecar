@@ -44,6 +44,8 @@ class Car(pygame.sprite.Sprite):
         self.velocity = self.velocity + self.acceleration
         if self.velocity > 20:
             self.velocity = 20
+        elif self.velocity < -10:
+            self.velocity = -10
 
         self.velocity_x = self.velocity * math.cos(self.angle * math.pi / 180)
         self.velocity_y = self.velocity * math.sin(self.angle * math.pi / 180)
