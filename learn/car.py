@@ -2,5 +2,5 @@ import numpy
 import torch
 
 '''
-the Dl model for trackmania nations forever
+the Dl model for track_mania nations forever
 '''
